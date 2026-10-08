@@ -1,5 +1,6 @@
 #include "MAC2D.h"
 
+
 MAC2D::MAC2D(int ny, int nx, double h) : u(ny, nx + 1, h), v(ny + 1, nx, h), nx(nx), ny(ny), h(h){}
 
 Grid2D MAC2D::divergence()
@@ -12,4 +13,12 @@ Grid2D MAC2D::divergence()
         }
     }
     return div;
+}
+
+std::array<double, 2> MAC2D::sampleVel(float y, float x)
+{
+    std::array<double,2> result;
+    result[0] = u.sample(y,x,U);
+    result[1] = v.sample(y,x,V);
+    return result;
 }

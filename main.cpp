@@ -1,4 +1,5 @@
 #include "MAC2D.h"
+#include <iostream>
 
 int main()
 {
@@ -8,14 +9,23 @@ int main()
 
     MAC2D velocity(ny, nx, h);
 
-    for (int i = 0; i < ny; i++)
-        for (int j = 0; j < nx + 1; j++)
-            velocity.u.set(i, j, j * h);
+    for (int i = 0; i < ny; i++) {
+        double y = (i + 0.5) * h;
+        for (int j = 0; j < nx + 1; j++) {
+            double x = j * h;
+            velocity.u.set(i, j, 2 * x + 3 * y);
+        }
+    }
 
-    for (int i = 0; i < ny + 1; i++)
-        for (int j = 0; j < nx; j++)
-            velocity.v.set(i, j, 0.0);
+    for (int i = 0; i < ny+1; i++) {
+        double y = i * h;
+        for (int j = 0; j < nx; j++) {
+            double x = (j + 0.5) * h;
+            velocity.v.set(i, j, 2 * x + 3 * y);
+        }
+    }
 
+    std::cout << velocity.sampleVel(0.2,0.3)[0];
     Grid2D grid = velocity.divergence();
 
     grid.savePGM("../test.pgm", 0, 1);
