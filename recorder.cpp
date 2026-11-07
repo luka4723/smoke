@@ -29,6 +29,13 @@ void Recorder::add(const std::string& name, Grid2D& g, Colormap cmap)
     tracks.push_back({name, &g, 0.0, 0.0, true, cmap});
 }
 
+void Recorder::setSolid(const std::vector<char>& solid, int nx, int ny)
+{
+    mask.cells = &solid;
+    mask.nx = nx;
+    mask.ny = ny;
+}
+
 void Recorder::capture()
 {
     for (Track& t : tracks) {
@@ -43,7 +50,7 @@ void Recorder::capture()
             }
         }
         std::string path = framePath(dir + "/frames/" + t.name, frames);
-        saveImage(*t.grid, path, t.vmin, t.vmax, t.cmap, scale);
+        saveImage(*t.grid, path, t.vmin, t.vmax, t.cmap, scale, mask);
     }
     frames++;
 }

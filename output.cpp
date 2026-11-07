@@ -42,10 +42,27 @@ RGB applyColormap(double t, Colormap cmap) {
     return {0, 0, 0};
 }
 
-} 
+const RGB SOLID_COLOR = {120, 80, 45};
+
+bool maskSolid(const SolidMask& m, int i, int j)
+{
+    if (i < 0 || i >= m.ny || j < 0 || j >= m.nx) return true;
+    return (*m.cells)[static_cast<size_t>(i) * m.nx + j] != 0;
+}
+
+bool isSolidPixel(const Grid2D& g, const SolidMask& m, int i, int j)
+{
+    if (m.cells == nullptr) return false;
+    if (g.ny == m.ny && g.nx == m.nx) return maskSolid(m, i, j);                                 // centri celija
+    if (g.ny == m.ny && g.nx == m.nx + 1) return maskSolid(m, i, j - 1) && maskSolid(m, i, j);  // u lica
+    if (g.ny == m.ny + 1 && g.nx == m.nx) return maskSolid(m, i - 1, j) && maskSolid(m, i, j);  // v lica
+    return false;
+}
+
+}
 
 void saveImage(const Grid2D& g, const std::string& path,
-               double vmin, double vmax, Colormap cmap, int scale)
+               double vmin, double vmax, Colormap cmap, int scale, SolidMask mask)
 {
     scale = std::max(scale, 1);
     const double range = vmax - vmin;
@@ -59,7 +76,7 @@ void saveImage(const Grid2D& g, const std::string& path,
             const int j = px / scale;
             const double val = g.mat[static_cast<size_t>(i) * g.nx + j];
             const double t = (range > 0.0) ? (val - vmin) / range : 0.5;
-            const RGB c = applyColormap(t, cmap);
+            const RGB c = isSolidPixel(g, mask, i, j) ? SOLID_COLOR : applyColormap(t, cmap);
             const size_t k = (static_cast<size_t>(py) * W + px) * 3;
             pixels[k] = c.r;
             pixels[k + 1] = c.g;
@@ -69,14 +86,14 @@ void saveImage(const Grid2D& g, const std::string& path,
 
     std::ofstream file(path, std::ios::binary);
     if (!file) {
-        std::cerr << "saveImage: ne mogu da otvorim " << path << "\n";
+        std::cerr << "saveImage: can't open " << path << "\n";
         return;
     }
     file << "P6\n" << W << " " << H << "\n255\n";
     file.write(reinterpret_cast<const char*>(pixels.data()), pixels.size());
 }
 
-void saveImageAuto(const Grid2D& g, const std::string& path, Colormap cmap, int scale)
+void saveImageAuto(const Grid2D& g, const std::string& path, Colormap cmap, int scale, SolidMask mask)
 {
     auto [lo, hi] = std::minmax_element(g.mat.begin(), g.mat.end());
     double vmin = *lo, vmax = *hi;
@@ -85,7 +102,7 @@ void saveImageAuto(const Grid2D& g, const std::string& path, Colormap cmap, int 
         vmin = -m;
         vmax = m;
     }
-    saveImage(g, path, vmin, vmax, cmap, scale);
+    saveImage(g, path, vmin, vmax, cmap, scale, mask);
 }
 
 std::string framePath(const std::string& dir, int frame, const std::string& prefix)

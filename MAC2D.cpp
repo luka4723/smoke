@@ -61,3 +61,33 @@ void MAC2D::advectVel(float dt)
 bool MAC2D::isFluid(int i, int j) {
     return i >= 0 && i < ny && j >= 0 && j < nx && !solid[i * nx + j];
 }
+
+void MAC2D::addSources(Grid2D& grid) {
+    for (Source& s : sources) {
+        grid.set(s.i, s.j, s.val);
+    }
+}
+
+void MAC2D::addBuoyancy(Grid2D& grid, float dt, double beta) {
+    for (int i=1; i<ny; i++) {
+        for (int j=0; j<nx; j++) {
+            if (!isFluid(i-1,j) || !isFluid(i,j)) continue;
+            double s = (grid.get(i-1,j) + grid.get(i,j)) / 2;
+            double val = v.get(i,j) + dt*beta*s;
+            v.set(i,j,val);
+        }
+    }
+}
+
+void MAC2D::addCircleSource(double cx, double cy, double r, double value)
+{
+    for (int i = 0; i < ny; i++) {
+        double y = (i + 0.5) * h;
+        for (int j = 0; j < nx; j++) {
+            double x = (j + 0.5) * h;
+            double dx = x - cx;
+            double dy = y - cy;
+            if (dx*dx + dy*dy < r*r && isFluid(i, j)) sources.push_back({i, j, value});
+        }
+    }
+}
