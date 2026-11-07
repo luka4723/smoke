@@ -1,7 +1,7 @@
 #include "MAC2D.h"
 
 
-MAC2D::MAC2D(int ny, int nx, double h) : u(ny, nx + 1, h), v(ny + 1, nx, h), nx(nx), ny(ny), h(h){}
+MAC2D::MAC2D(int ny, int nx, double h) : u(ny, nx + 1, h), v(ny + 1, nx, h), nx(nx), ny(ny), h(h), solid(nx*ny,0){}
 
 Grid2D MAC2D::divergence()
 {
@@ -56,4 +56,8 @@ void MAC2D::advectVel(float dt)
             u.set(i, j, u_end);
         }
     }
+}
+
+bool MAC2D::isFluid(int i, int j) {
+    return i >= 0 && i < ny && j >= 0 && j < nx && !solid[i * nx + j];
 }
