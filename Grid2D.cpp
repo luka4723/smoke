@@ -19,7 +19,7 @@ void Grid2D::print()
     }
 }
 
-void Grid2D::savePGM(const char* path, float lo, float hi)
+void Grid2D::savePGM(const char* path)
 {
     std::ofstream file(path);
 
@@ -27,10 +27,10 @@ void Grid2D::savePGM(const char* path, float lo, float hi)
     file << nx << " " << ny << "\n";
     file << "255\n";
 
-    for (int j = ny - 1; j >= 0; --j) {
+    for (int j = 0; j <ny; j++) {
         for (int i = 0; i < nx; ++i) {
             float value = get(j, i);
-            float t = (value - lo) / (hi - lo);
+            float t = (value - this->min()) / (this->max() - this->min());
 
             if (t < 0.0f) t = 0.0f;
             if (t > 1.0f) t = 1.0f;
@@ -46,7 +46,7 @@ void Grid2D::savePGM(const char* path, float lo, float hi)
 double Grid2D::sample(float y, float x, GridType t)
 {
     float off_x,off_y;
-    if(t == PRESSURE) {off_x=0.5f;off_y=0.5f;}
+    if(t == SCALAR) {off_x=0.5f;off_y=0.5f;}
     else if(t == U) {off_x=0.0f;off_y=0.5f;}
     else if(t == V) {off_x=0.5f;off_y=0.0f;}
 
@@ -76,3 +76,6 @@ double Grid2D::sample(float y, float x, GridType t)
 
     return hor1 * (y1-grid_y)/(y1-y0) + hor2 * (grid_y-y0)/(y1-y0);
 }
+
+double Grid2D::max() {return *std::max_element(mat.begin(), mat.end());}
+double Grid2D::min() {return *std::min_element(mat.begin(), mat.end());}

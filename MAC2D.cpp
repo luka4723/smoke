@@ -18,7 +18,42 @@ Grid2D MAC2D::divergence()
 std::array<double, 2> MAC2D::sampleVel(float y, float x)
 {
     std::array<double,2> result;
-    result[0] = u.sample(y,x,U);
-    result[1] = v.sample(y,x,V);
+    result[0] = v.sample(y,x,V);
+    result[1] = u.sample(y,x,U);
     return result;
+}
+
+void MAC2D::advectVel(float dt)
+{   
+    auto vel_src = *this;
+
+    //v
+    for (int i = 0; i < ny+1; i++) {
+        double y = i * h;
+        for (int j = 0; j < nx; j++) {
+            double x = (j + 0.5) * h;
+            auto vel = vel_src.sampleVel(y,x);
+
+            //Remove comment for RK2
+            vel = vel_src.sampleVel(y-vel[0]*dt/2,x-vel[1]*dt/2);
+
+            float v_end = vel_src.v.sample(y-vel[0]*dt,x-vel[1]*dt,V);   
+            v.set(i, j, v_end);
+        }
+    }
+
+    //u
+    for (int i = 0; i < ny; i++) {
+        double y = (i + 0.5) * h;
+        for (int j = 0; j < nx + 1; j++) {
+            double x = j * h;
+            auto vel = vel_src.sampleVel(y,x);
+
+            //Remove comment for RK2
+            vel = vel_src.sampleVel(y-vel[0]*dt/2,x-vel[1]*dt/2);
+
+            float u_end = vel_src.u.sample(y-vel[0]*dt,x-vel[1]*dt,U);   
+            u.set(i, j, u_end);
+        }
+    }
 }

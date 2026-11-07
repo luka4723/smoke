@@ -15,4 +15,6 @@ public:
 
     Grid2D divergence();
     std::array<double, 2> sampleVel(float y, float x); 
+    void advectVel(float dt);
+
 };
