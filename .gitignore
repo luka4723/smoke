@@ -1,4 +1,5 @@
 *.pgm
 /build
+/cmake-build-vs
 /tests
 .vscode

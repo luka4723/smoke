@@ -1,5 +1,5 @@
 #include "MAC2D.h"
-
+#include <cmath>
 
 MAC2D::MAC2D(int ny, int nx, double h) : u(ny, nx + 1, h), v(ny + 1, nx, h), nx(nx), ny(ny), h(h), solid(nx*ny,0){}
 
@@ -74,6 +74,65 @@ void MAC2D::addBuoyancy(Grid2D& grid, float dt, double beta) {
             if (!isFluid(i-1,j) || !isFluid(i,j)) continue;
             double s = (grid.get(i-1,j) + grid.get(i,j)) / 2;
             double val = v.get(i,j) + dt*beta*s;
+            v.set(i,j,val);
+        }
+    }
+}
+
+void MAC2D::addBuoyancy(Grid2D& density, Grid2D& temperature, float dt, double alpha, double beta) {
+    for (int i=1; i<ny; i++) {
+        for (int j=0; j<nx; j++) {
+            if (!isFluid(i-1,j) || !isFluid(i,j)) continue;
+            double s = (density.get(i-1,j) + density.get(i,j)) / 2;
+            double T = (temperature.get(i-1,j) + temperature.get(i,j)) / 2;
+            double val = v.get(i,j) + dt*(-alpha*s + beta*T);
+            v.set(i,j,val);
+        }
+    }
+}
+
+void MAC2D::addVorticityConfinement(float dt, double eps)
+{
+    Grid2D w(ny, nx, h);
+    Grid2D fx(ny, nx, h);
+    Grid2D fy(ny, nx, h);
+
+    for (int i=1; i<ny-1; i++) {
+        for (int j=1; j<nx-1; j++) {
+            if (!isFluid(i,j)) continue;
+            double vr = (v.get(i,j+1) + v.get(i+1,j+1)) / 2;
+            double vl = (v.get(i,j-1) + v.get(i+1,j-1)) / 2;
+            double ut = (u.get(i+1,j) + u.get(i+1,j+1)) / 2;
+            double ub = (u.get(i-1,j) + u.get(i-1,j+1)) / 2;
+            w.set(i,j, (vr - vl)/(2*h) - (ut - ub)/(2*h));
+        }
+    }
+
+    for (int i=1; i<ny-1; i++) {
+        for (int j=1; j<nx-1; j++) {
+            if (!isFluid(i,j)) continue;
+            double gx = (std::abs(w.get(i,j+1)) - std::abs(w.get(i,j-1))) / (2*h);
+            double gy = (std::abs(w.get(i+1,j)) - std::abs(w.get(i-1,j))) / (2*h);
+            double len = std::sqrt(gx*gx + gy*gy) + 1e-20;
+            fx.set(i,j, eps*h*(gy/len)*w.get(i,j));
+            fy.set(i,j, -eps*h*(gx/len)*w.get(i,j));
+        }
+    }
+
+    //u
+    for (int i=0; i<ny; i++) {
+        for (int j=1; j<nx; j++) {
+            if (!isFluid(i,j-1) || !isFluid(i,j)) continue;
+            double val = u.get(i,j) + dt*(fx.get(i,j-1) + fx.get(i,j))/2;
+            u.set(i,j,val);
+        }
+    }
+
+    //v
+    for (int i=1; i<ny; i++) {
+        for (int j=0; j<nx; j++) {
+            if (!isFluid(i-1,j) || !isFluid(i,j)) continue;
+            double val = v.get(i,j) + dt*(fy.get(i-1,j) + fy.get(i,j))/2;
             v.set(i,j,val);
         }
     }

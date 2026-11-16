@@ -1,7 +1,7 @@
 #include "MAC2D.h"
 #include "advection.h"
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include "output.h"
 #include "projection.h"
 #include "recorder.h"
@@ -10,14 +10,17 @@ int main()
 {
     int nx = 128;
     int ny = 128;
-    double h = 1.0 / nx;
+    double h = 1.0/nx;
     double dt = h;
     int steps = 400;
-    double beta = 1.0;
-
+    double alpha = 0.3;   
+    double beta = 1.5;    
+    double cooling = 0.6; 
+    double eps = 3.0;     
     MAC2D velocity(ny, nx, h);
     Grid2D src(ny, nx, h);
     Grid2D dst(ny, nx, h);
+    Grid2D T(ny, nx, h);
 
     //adding solids
     for(int i=0; i<velocity.ny; i++){
@@ -87,15 +90,21 @@ int main()
     rec.add("v", velocity.v, -1.0, 1.0, Colormap::DIVERGING);
     rec.add("pressure", p, Colormap::DIVERGING);
     rec.add("div", div, Colormap::DIVERGING);
+    rec.add("temperature", T, 0.0, 1.0, Colormap::HEAT);
  
     rec.capture();
     for(int i=0;i<steps;i++)
     {
         velocity.addSources(temp);
+        velocity.addSources(T);
         advectScalar(dst, temp, velocity, dt);
         temp = dst;
+        advectScalar(dst, T, velocity, dt);
+        T = dst;
+        for (double& x : T.mat) x *= exp(-cooling*dt);
         velocity.advectVel(dt);
-        velocity.addBuoyancy(temp, dt, beta);
+        velocity.addBuoyancy(temp, T, dt, alpha, beta);
+        velocity.addVorticityConfinement(dt, eps);
         it = project(velocity, p, dt, 1.0, 500, 1e-5);
 
         if (i % 50 == 0) std::cout << "step " << i << ": " << it << " iteracija, max|v| = " << maxAbs(velocity.v) << "\n";

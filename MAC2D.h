@@ -24,4 +24,6 @@ public:
     void addSources(Grid2D& grid);
     void addBuoyancy(Grid2D& grid, float dt, double beta);
     void addCircleSource(double cx, double cy, double r, double value);
+    void addBuoyancy(Grid2D& density, Grid2D& temperature, float dt, double alpha, double beta);
+    void addVorticityConfinement(float dt, double eps);
 };
