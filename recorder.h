@@ -24,12 +24,8 @@ public:
 
     Recorder(const std::string& dir, int scale = 4, int fps = 30);
 
-    // Fiksan opseg vrednosti
     void add(const std::string& name, Grid2D& g, double vmin, double vmax, Colormap cmap);
-    // Opseg se uzima iz prvog frejma i ostaje isti do kraja
     void add(const std::string& name, Grid2D& g, Colormap cmap);
-
-    // Cvrste celije se na svim slikama crtaju braon
     void setSolid(const std::vector<char>& solid, int nx, int ny);
 
     void capture();

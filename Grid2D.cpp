@@ -7,10 +7,6 @@
 
 Grid2D::Grid2D(int ny, int nx, double h): ny(ny), nx(nx), h(h), mat(nx * ny, 0.0){}
 
-double Grid2D::get(int n, int m) {return mat[n * nx + m];}
-
-void Grid2D::set(int n, int m, double val){mat[n * nx + m] = val;}
-
 void Grid2D::print()
 {
     for (int i = 0; i < ny; i++) {

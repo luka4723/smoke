@@ -12,8 +12,8 @@ public:
 
     Grid2D(int ny, int nx, double h);
 
-    double get(int n, int m);
-    void set(int n, int m, double val);
+    double get(int n, int m) {return mat[n * nx + m];}
+    void set(int n, int m, double val) {mat[n * nx + m] = val;}
     void print();
     void savePGM(const char* path);
     double sample(float y, float x, GridType t);

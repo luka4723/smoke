@@ -10,7 +10,8 @@ A 2D Eulerian smoke simulator written from scratch in C++20, following R. Bridso
 
 - **Staggered MAC grid**: velocity components on cell faces, scalars (smoke density, temperature, pressure) at cell centers
 - **Semi-Lagrangian advection** [2] with RK2 backtracing and bilinear interpolation, for scalars and velocity
-- **Pressure projection**: the pressure Poisson equation is solved with Gauss–Seidel (warm-started from the previous step, stopped at a tolerance), then the pressure gradient is subtracted so the velocity becomes divergence-free
+- **Pressure projection**: the pressure Poisson equation is solved with red-black Gauss–Seidel (warm-started from the previous step, stopped at a tolerance), then the pressure gradient is subtracted so the velocity becomes divergence-free
+- **OpenMP**: all grid loops run in parallel, including both half sweeps of the red-black solver; the result does not depend on the number of threads
 - **Solid walls and obstacles** from a voxel mask: normal velocity is zero on solid faces, and solid cells are left out of the pressure solve
 - **Temperature-based buoyancy** [3]: smoke makes the fluid heavier, heat makes it lighter, and the temperature decays over time
 - **Vorticity confinement** [3]: puts back small-scale swirls that the semi-Lagrangian advection smears out
@@ -42,10 +43,10 @@ $$u_{i,j} \leftarrow u_{i,j} - \frac{\Delta t}{\rho h}\,(p_{i,j} - p_{i,j-1}), \
 
 ## Results
 
-Scene in `main.cpp`: 128×128 grid, $\Delta t = h$, 400 steps, $\alpha = 0.3$, $\beta = 1.5$, $c = 0.6$, $\varepsilon = 3$.
+Scene in `main.cpp`: 256×256 grid, $\Delta t = h$, 2000 steps, $\alpha = 0.3$, $\beta = 1.5$, $c = 0.6$, $\varepsilon = 3$. The GIFs show every 8th step from step 250 on.
 
-- Gauss–Seidel needs about 111 iterations per step on average (at most 186 after the first step), with a warm start and a tolerance of $10^{-5}$ on the pressure update. It never reaches the 500-iteration limit.
-- After projection, $\max|\nabla\cdot\mathbf{u}| \approx 2.6\cdot10^{-3}$, compared with up to ~16 before projection.
+- Red-black Gauss–Seidel needs about 130 iterations per step on average, with a warm start and a tolerance of $10^{-5}$ on the pressure update. The 500-iteration limit is reached in only 2 of the 2000 steps, one of them the very first step, which starts from zero pressure.
+- In the converged steps, $\max|\nabla\cdot\mathbf{u}| \le 10^{-2}$ after projection.
 
 ## Build and run
 
@@ -67,7 +68,7 @@ Results are written to `tests/` (`density.gif`, `temperature.gif`, `start_*.png`
 | `Grid2D` | 2D grid storage, bilinear sampling for cell-centered, $u$ and $v$ layouts |
 | `MAC2D` | staggered velocity field: divergence, velocity advection, solid mask, sources, buoyancy, vorticity confinement |
 | `advection` | semi-Lagrangian advection of scalars |
-| `projection` | pressure solve (Gauss–Seidel) and velocity update |
+| `projection` | pressure solve (red-black Gauss–Seidel) and velocity update |
 | `output` | PPM export with colormaps, diagnostics (`maxAbs`, `sum`) |
 | `recorder` | captures several grids every step, builds PNG snapshots and GIFs with ffmpeg |
 | `main.cpp` | scene setup (walls, obstacle, source) and the time loop |
@@ -75,7 +76,7 @@ Results are written to `tests/` (`density.gif`, `temperature.gif`, `start_*.png`
 ## Roadmap
 
 - Preconditioned conjugate gradient with a MIC(0) preconditioner [1], compared with Gauss–Seidel (iterations, time, scaling with resolution)
-- OpenMP parallelization and higher resolution (256² and more)
+- Higher resolution (512² and more)
 - Less diffusive advection (MacCormack / BFECC)
 - Water with a free surface
 

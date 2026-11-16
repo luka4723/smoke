@@ -38,7 +38,9 @@ void Recorder::setSolid(const std::vector<char>& solid, int nx, int ny)
 
 void Recorder::capture()
 {
-    for (Track& t : tracks) {
+    #pragma omp parallel for
+    for (int k = 0; k < static_cast<int>(tracks.size()); k++) {
+        Track& t = tracks[k];
         if (t.autoRange && frames == 0) {
             auto [lo, hi] = std::minmax_element(t.grid->mat.begin(), t.grid->mat.end());
             t.vmin = *lo;
@@ -61,7 +63,7 @@ void Recorder::finish()
 
     std::string check = std::string("ffmpeg -version > ") + NULL_DEV + " 2>&1";
     if (std::system(check.c_str()) != 0) {
-        std::cout << "Recorder: ffmpeg nije pronadjen, frejmovi su u " << dir << "/frames/\n";
+        std::cout << "Recorder: ffmpeg not found, frames are in " << dir << "/frames/\n";
         return;
     }
 
@@ -81,7 +83,7 @@ void Recorder::finish()
         int r = std::system(start.c_str());
         r += std::system(end.c_str());
         r += std::system(gif.c_str());
-        if (r != 0) std::cout << "Recorder: ffmpeg greska za " << t.name << "\n";
-        std::cout << "Recorder: " << t.name << " (" << frames << " frejmova, opseg " << t.vmin << " .. " << t.vmax << ")\n";
+        if (r != 0) std::cout << "Recorder: ffmpeg error for " << t.name << "\n";
+        std::cout << "Recorder: " << t.name << " (" << frames << " frames, range " << t.vmin << " .. " << t.vmax << ")\n";
     }
 }

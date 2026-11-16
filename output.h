@@ -28,6 +28,5 @@ void saveImageAuto(const Grid2D& g, const std::string& path,
 std::string framePath(const std::string& dir, int frame,
                       const std::string& prefix = "frame");
 
-// Dijagnostika
 double maxAbs(const Grid2D& g); 
 double sum(const Grid2D& g);  

@@ -1,6 +1,7 @@
 #include "advection.h"
 
 void advectScalar(Grid2D& dst, Grid2D& src, MAC2D& velocity, float dt){
+    #pragma omp parallel for
     for (int i = 0; i < dst.ny; i++) {
         double y = (i + 0.5) * dst.h;
         for (int j = 0; j < dst.nx; j++) {

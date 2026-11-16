@@ -6,6 +6,7 @@ MAC2D::MAC2D(int ny, int nx, double h) : u(ny, nx + 1, h), v(ny + 1, nx, h), nx(
 Grid2D MAC2D::divergence()
 {
     Grid2D div(ny, nx, h);
+    #pragma omp parallel for
     for (int i = 0; i < ny; i++) {
         for (int j = 0; j < nx; j++) {
             double val =(u.get(i, j+1) - u.get(i, j) + v.get(i+1, j) - v.get(i, j))/h;
@@ -28,6 +29,7 @@ void MAC2D::advectVel(float dt)
     auto vel_src = *this;
 
     //v
+    #pragma omp parallel for
     for (int i = 0; i < ny+1; i++) {
         double y = i * h;
         for (int j = 0; j < nx; j++) {
@@ -43,6 +45,7 @@ void MAC2D::advectVel(float dt)
     }
 
     //u
+    #pragma omp parallel for
     for (int i = 0; i < ny; i++) {
         double y = (i + 0.5) * h;
         for (int j = 0; j < nx + 1; j++) {
@@ -58,10 +61,6 @@ void MAC2D::advectVel(float dt)
     }
 }
 
-bool MAC2D::isFluid(int i, int j) {
-    return i >= 0 && i < ny && j >= 0 && j < nx && !solid[i * nx + j];
-}
-
 void MAC2D::addSources(Grid2D& grid) {
     for (Source& s : sources) {
         grid.set(s.i, s.j, s.val);
@@ -69,6 +68,7 @@ void MAC2D::addSources(Grid2D& grid) {
 }
 
 void MAC2D::addBuoyancy(Grid2D& grid, float dt, double beta) {
+    #pragma omp parallel for
     for (int i=1; i<ny; i++) {
         for (int j=0; j<nx; j++) {
             if (!isFluid(i-1,j) || !isFluid(i,j)) continue;
@@ -80,6 +80,7 @@ void MAC2D::addBuoyancy(Grid2D& grid, float dt, double beta) {
 }
 
 void MAC2D::addBuoyancy(Grid2D& density, Grid2D& temperature, float dt, double alpha, double beta) {
+    #pragma omp parallel for
     for (int i=1; i<ny; i++) {
         for (int j=0; j<nx; j++) {
             if (!isFluid(i-1,j) || !isFluid(i,j)) continue;
@@ -97,6 +98,7 @@ void MAC2D::addVorticityConfinement(float dt, double eps)
     Grid2D fx(ny, nx, h);
     Grid2D fy(ny, nx, h);
 
+    #pragma omp parallel for
     for (int i=1; i<ny-1; i++) {
         for (int j=1; j<nx-1; j++) {
             if (!isFluid(i,j)) continue;
@@ -108,6 +110,7 @@ void MAC2D::addVorticityConfinement(float dt, double eps)
         }
     }
 
+    #pragma omp parallel for
     for (int i=1; i<ny-1; i++) {
         for (int j=1; j<nx-1; j++) {
             if (!isFluid(i,j)) continue;
@@ -120,6 +123,7 @@ void MAC2D::addVorticityConfinement(float dt, double eps)
     }
 
     //u
+    #pragma omp parallel for
     for (int i=0; i<ny; i++) {
         for (int j=1; j<nx; j++) {
             if (!isFluid(i,j-1) || !isFluid(i,j)) continue;
@@ -129,6 +133,7 @@ void MAC2D::addVorticityConfinement(float dt, double eps)
     }
 
     //v
+    #pragma omp parallel for
     for (int i=1; i<ny; i++) {
         for (int j=0; j<nx; j++) {
             if (!isFluid(i-1,j) || !isFluid(i,j)) continue;

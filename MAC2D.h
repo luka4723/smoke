@@ -20,7 +20,7 @@ public:
     Grid2D divergence();
     std::array<double, 2> sampleVel(float y, float x); 
     void advectVel(float dt);
-    bool isFluid(int i, int j);
+    bool isFluid(int i, int j) {return i >= 0 && i < ny && j >= 0 && j < nx && !solid[i * nx + j];}
     void addSources(Grid2D& grid);
     void addBuoyancy(Grid2D& grid, float dt, double beta);
     void addCircleSource(double cx, double cy, double r, double value);

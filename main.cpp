@@ -8,11 +8,11 @@
 
 int main()
 {
-    int nx = 128;
-    int ny = 128;
+    int nx = 256;
+    int ny = 256;
     double h = 1.0/nx;
     double dt = h;
-    int steps = 400;
+    int steps = 2000;
     double alpha = 0.3;   
     double beta = 1.5;    
     double cooling = 0.6; 
@@ -31,7 +31,6 @@ int main()
         velocity.solid[j] = 1;
         velocity.solid[(velocity.ny-1)*velocity.nx+j] = 1;
     }
-    //varijanta: prepreka iznad izvora - dim se razdvaja oko nje
     for (int i = ny / 2; i < ny / 2 + 8; i++) {
        for (int j = nx / 2 - 12; j < nx / 2 + 12; j++) {
            velocity.solid[i * nx + j] = 1;
@@ -73,12 +72,11 @@ int main()
         }
     }
 
-   //projekcija pocetnog polja
     Grid2D p(ny, nx, h);
 
     setWallVelocities(velocity);
     int it = project(velocity, p, dt, 1.0, 2000, 1e-8);
-    std::cout << "max|div| = " << maxAbs(velocity.divergence()) << " (" << it << " iteracija)\n";
+    std::cout << "max|div| = " << maxAbs(velocity.divergence()) << " (" << it << " iterations)\n";
  
     auto temp = src;
     Grid2D div = velocity.divergence();
@@ -107,12 +105,12 @@ int main()
         velocity.addVorticityConfinement(dt, eps);
         it = project(velocity, p, dt, 1.0, 500, 1e-5);
 
-        if (i % 50 == 0) std::cout << "step " << i << ": " << it << " iteracija, max|v| = " << maxAbs(velocity.v) << "\n";
+        if (i % 50 == 0) std::cout << "step " << i << ": " << it << " iterations, max|v| = " << maxAbs(velocity.v) << "\n";
         div = velocity.divergence();
         rec.capture();
     }
     rec.finish();
  
-    std::cout << ", kraj = " << sum(temp) << "\n";
+    std::cout << "total smoke = " << sum(temp) << "\n";
     return 0;
 }

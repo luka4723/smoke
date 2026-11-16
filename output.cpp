@@ -53,9 +53,9 @@ bool maskSolid(const SolidMask& m, int i, int j)
 bool isSolidPixel(const Grid2D& g, const SolidMask& m, int i, int j)
 {
     if (m.cells == nullptr) return false;
-    if (g.ny == m.ny && g.nx == m.nx) return maskSolid(m, i, j);                                 // centri celija
-    if (g.ny == m.ny && g.nx == m.nx + 1) return maskSolid(m, i, j - 1) && maskSolid(m, i, j);  // u lica
-    if (g.ny == m.ny + 1 && g.nx == m.nx) return maskSolid(m, i - 1, j) && maskSolid(m, i, j);  // v lica
+    if (g.ny == m.ny && g.nx == m.nx) return maskSolid(m, i, j);                                // center
+    if (g.ny == m.ny && g.nx == m.nx + 1) return maskSolid(m, i, j - 1) && maskSolid(m, i, j);  // u
+    if (g.ny == m.ny + 1 && g.nx == m.nx) return maskSolid(m, i - 1, j) && maskSolid(m, i, j);  // v 
     return false;
 }
 
